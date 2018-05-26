@@ -19,19 +19,23 @@ def get_x_rotation(x,y,z):
 def connect(bd_addr):
 	port = 1
 	print("Running")
-	print("In-knee-ciating")
+	print("In-knee-ciating "+bd_addr)
 	sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 	sock.connect((bd_addr,port))
 	print("Connected")
 	data=""
-	return sock
+	return sock, data
 
 def close(sock):
 	sock.close()
 	
-def get_knee_data(sock):
-	# Uses bluetooth connection to obtain acc and flex data as string, separates  	
+def get_knee_data(sock, data):
+	# Uses bluetooth connection to obtain acc and flex data as string, separates  
 	try:
+		x_rotation = 0
+		y_rotation = 0
+		flex = 0
+		success = False
 		data += str(sock.recv(1024), 'utf-8')
 		data_end = data.find('\n')
 		if data_end != -1:
@@ -50,14 +54,18 @@ def get_knee_data(sock):
 				
 					x_rotation = get_x_rotation(acc_x, acc_y, acc_z)
 					y_rotation = get_y_rotation(acc_x, acc_y, acc_z)
-					print(str(x_rotation), str(y_rotation), string_flex, sep=" ")
+					# print(str(x_rotation), str(y_rotation), string_flex, sep=" ")
+					success = True
 				except:
 					print('No data this time')
 			data = data[data_end+1:]
-	except KeyboardInterrupt:
-		print('Keyboard interrupted')
+		else:
+			x_rotation = 0
+			y_rotation = 0
+			flex = 0
+	except:
 		x_rotation = 0
 		y_rotation = 0
 		flex = 0
-	return (x_rotation, y_rotation, flex)
+	return x_rotation, y_rotation, flex, success, data
 	
