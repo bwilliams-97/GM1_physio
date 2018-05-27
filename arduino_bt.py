@@ -15,6 +15,10 @@ def get_y_rotation(x,y,z):
 def get_x_rotation(x,y,z):
     radians = math.atan2(y, dist(x,z))
     return math.degrees(radians)	
+   
+def get_z_rotation(x,y,z):
+	radians = math.atan2(y, x)
+	return math.degrees(radians)
     
 def connect(bd_addr):
 	port = 1
@@ -34,6 +38,7 @@ def get_knee_data(sock, data):
 	try:
 		x_rotation = 0
 		y_rotation = 0
+		z_rotation = 0
 		flex = 0
 		success = False
 		data += str(sock.recv(1024), 'utf-8')
@@ -54,6 +59,7 @@ def get_knee_data(sock, data):
 				
 					x_rotation = get_x_rotation(acc_x, acc_y, acc_z)
 					y_rotation = get_y_rotation(acc_x, acc_y, acc_z)
+					z_rotation = get_z_rotation(acc_x, acc_y, acc_z)
 					# print(str(x_rotation), str(y_rotation), string_flex, sep=" ")
 					success = True
 				except:
@@ -62,10 +68,12 @@ def get_knee_data(sock, data):
 		else:
 			x_rotation = 0
 			y_rotation = 0
+			z_rotation = 0
 			flex = 0
 	except:
 		x_rotation = 0
 		y_rotation = 0
+		z_rotation = 0
 		flex = 0
-	return x_rotation, y_rotation, flex, success, data
+	return x_rotation, y_rotation, z_rotation, flex, success, data
 	

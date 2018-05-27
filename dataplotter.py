@@ -5,20 +5,20 @@ matplotlib.use("TkAgg")
 from matplotlib.pyplot import *
 import time
 
-def data_plot(x, y, flex):
+def data_plot(x, y, flex, time):
 	figure()
-	plot(x)
-	plot(y)
-	plot(flex)
+	plot(time, x)
+	plot(time, y)
+	plot(time, flex)
 	title(r"Knee data")
 	ylabel("Amplitude")
-	xlabel("Sample")
+	xlabel("Time (s)")
 	legend(["x", "y", "flex"])
 	show()
 	
 def gui_plot():
-	tick_img = imread('tick.png')
-	cross_img = imread('cross.png')
+	tick_img = imread('/home/pi/GM1_sensors/GM1_physio/tick.png')
+	cross_img = imread('/home/pi/GM1_sensors/GM1_physio/cross.png')
 	gui = figure('Leg raise status', figsize=(15,15))
 	ax = gui.add_subplot(111)
 	ax.text(0.1,0.8, "Leg above ground")

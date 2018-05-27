@@ -2,7 +2,6 @@ import requests
 from datetime import datetime
 import time
 import json
-import sys
 
 #codes for convenience
 user = "GroupThree"
@@ -37,45 +36,107 @@ record_search = requests.post('https://cued2018.xenplate.com/api/record/search',
 
 #=======================================================================
 #=======================================================================
-def create_plate(rec_id = "5", temp_id = "3a5c9958-dc82-4c74-be84-ded2514fd9d8", vers = "15"):
-	plate_data_create = requests.post('https://cued2018.xenplate.com/api/data/create',
-		json={"data": {
-			"record_id": rec_id,
-			"plate_template_id": temp_id, #what is a plate template id?
-			"plate_template_version": vers,          #keep this as the latest iteration of leg raise template
-			#"prior_data_id": "",                  #optional
-			#"track_id": "",
-			"control_values":                       
-						[
-							{"id": "4", "value": 10}, #leg raise sessions
-                        #first green bubble
-							{"id": 9, "value": "True"},  #completed?
-							{"id": 10, "value": 17.3}, #best time
-							{"id": 22, "value": 12},   #attempts
-						#second green bubble
-							{"id": 13, "value": "True"},  #completed?
-							{"id": 16, "value": 17.3}, #best time
-							{"id": 23, "value": 12},   #attempts
-						#third green bubble
-							{"id": 14, "value": "True"},  #completed?
-							{"id": 17, "value": 17.3}, #best time
-							{"id": 24, "value": 12},   #attempts
-						#fourth green bubble
-							{"id": 15, "value": "True"},  #completed?
-							{"id": 18, "value": 17.3}, #best time
-							{"id": 25, "value": 12},   #attempts
-                                            
-						#comparison to last session's tasks
-							{"id": 28, "value": "10%"},
-						#figure and raw data attachment?
-						]
-					}
-				},
-		headers={'Authorization': 'X-API-KEY: ' + key},
-		cert=(cert_path, key_path)
-	)
+class Plate(object):
+    """Class representing a plate record to send"""
+    def __init__(self, rec_id, temp_id, version, control_values, leg_raise_sessions):
+        self.record_id = rec_id
+        self.temp_id = temp_id
+        self.version = version
+        self.control_values = control_values
+        self.leg_raise_sessions = leg_raise_sessions
+
+    def to_json_dict(self):
+        # this might not be right, as I can't copy and paste your json
+        control_json = [self.leg_raise_sessions.to_json_dict()]
+        for c in self.control_values:
+            control_json += c.to_json_list()
+
+#        control_json += [self.last_task_comparison.to_json_dict()]
+
+        return {
+            "data":{
+                "record_id": self.record_id,
+                "plate_template_id": self.temp_id,
+                "plate_template_version": self.version,
+                "control_values": control_json
+            }
+        }
 
 
+class LegRaiseSessions(object):
+    """docstring for LegRaiseSessions"""
+    def __init__(self, c):
+        self.count = c
+
+    def to_json_dict(self):
+        return {
+            "id": 4,
+            "value": self.count
+        }
+
+class Calf(object):
+    """control value class"""
+    def __init__(self, c, t, a):
+        self.complete = c
+        self.time = t
+        self.attempts = a
+
+    def to_json_list(self):
+        return [
+            {"id": 9, "value": str(self.complete)},
+            {"id": 10,"value": self.time},
+            {"id": 22,"value": self.attempts}
+        ]
+    
+class Thigh(object):
+    """control value class"""
+    def __init__(self, c, t, a):
+        self.complete = c
+        self.time = t
+        self.attempts = a
+
+    def to_json_list(self):
+        return [
+            {"id": 13, "value": str(self.complete)},
+            {"id": 16,"value": self.time},
+            {"id": 23,"value": self.attempts}
+        ]
+    
+class Straight(object):
+    """control value class"""
+    def __init__(self, c, t, a):
+        self.complete = c
+        self.time = t
+        self.attempts = a
+
+    def to_json_list(self):
+        return [
+            {"id": 14, "value": str(self.complete)},
+            {"id": 17,"value": self.time},
+            {"id": 24,"value": self.attempts}
+        ]
+
+class Angle(object):
+    """control value class"""
+    def __init__(self, c, t, a):
+        self.complete = c
+        self.time = t
+        self.attempts = a
+
+    def to_json_list(self):
+        return [
+            {"id": 15, "value": str(self.complete)},
+            {"id": 18,"value": self.time},
+            {"id": 25,"value": self.attempts}
+        ]
+
+
+def create_plate(controls):
+    plate_data_create = requests.post('https://cued2018.xenplate.com/api/data/create',
+                            json=controls.to_json_dict(),
+                        headers={'Authorization': 'X-API-KEY: ' + key},
+                        cert=(cert_path, key_path)
+                     )
 
 
 #=======================================================================
