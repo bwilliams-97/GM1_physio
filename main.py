@@ -11,6 +11,7 @@ import numpy as np
 import sys
 import Xenplate_Functions as xf
 import re
+from operator import add
 
 #======================================================================
 ##all of the top level xenplate functions working (still need to add figures and raw data)
@@ -36,7 +37,8 @@ print(p.to_json_dict())
 xf.create_plate(p)
 #======================================================================
 
-
+# Function that finds the max difference in an array
+# Not currently used (would be useful for detecting step changes over fixed interval)
 def max_difference(array):
 	min_elem = array[0]
 	max_elem = array[0]
@@ -50,17 +52,20 @@ def max_difference(array):
 	
 	return max_diff
 	
+# Function that finds the number of lines in a string by detecting new line characters
 def find_no_lines(string):
 	indices = [match.start() for match in re.finditer(re.escape('\n'), string)]
-	return indices
+	return len(indices)
 
-t0 = time.time()
 elapsed = 0.0;
 
+# Initialise data arrays
 xarray_up = []
 xarray_lo = []
 yarray_up = []
 yarray_lo = []
+zarray_up = []
+zarray_lo = []
 flexarray_up = []
 flexarray_lo = []
 time_up = []
@@ -70,79 +75,84 @@ time_lo = []
 bd_addr_1 = "30:14:11:19:00:48"
 bd_addr_2 = "20:14:11:14:11:13"
 
+# Connect to bluetooth
 sock_up, data_up = bt.connect(bd_addr_1)
 sock_lo, data_lo = bt.connect(bd_addr_2)
 
-# Set boolean success criteria
+# Initialise boolean success criteria
 ula_success = False
 ulm_success = False
 lla_success = False
 llm_success = False
 
+ulm_timer = 0 # Used for step change
+
 im1l, im1r, im2l, im2r, im3l, im3r, im4l, im4r = dp.gui_plot() # Open GUI
 
 t0 = time.time() # Start timer
-while (elapsed < 20):
-	# Read data in
+while (elapsed < 10):
+	# Read data in - upper leg
 	x_rot_up, y_rot_up, z_rot_up, flex_up, success, data_up = bt.get_knee_data(sock_up, data_up)
-	#print(data_up)
-	if success is True:
-		print("upper", x_rot_up, y_rot_up, flex_up, elapsed, sep=" ")
+	if success is True: # If data read in, print out and append to data array
+		print("upper", x_rot_up, y_rot_up, z_rot_up, flex_up, elapsed, sep=" ")
 		xarray_up.append(x_rot_up)
 		yarray_up.append(y_rot_up)
+		zarray_up.append(z_rot_up)
 		flexarray_up.append(flex_up)
 		time_up.append(elapsed)
-	
+	# Read data in - lower leg
 	x_rot_lo, y_rot_lo, z_rot_lo, flex_lo, success, data_lo = bt.get_knee_data(sock_lo, data_lo)
-	#print(data_lo)
-	if success is True:
-		print("lower", x_rot_lo, z_rot_lo, flex_lo, elapsed, sep=" ")
+	if success is True: # If data read in, print out and append to data array
+		print("lower", x_rot_lo, x_rot_lo, z_rot_lo, flex_lo, elapsed, sep=" ")
 		xarray_lo.append(x_rot_lo)
 		yarray_lo.append(y_rot_lo)
+		zarray_lo.append(z_rot_lo)
 		flexarray_lo.append(flex_lo)
 		time_lo.append(elapsed)
 	
-	elapsed = time.time() - t0
+	elapsed = time.time() - t0 # Update timer
 	
 	# Bin the entries in the buffer if it gets too long
 	data_lines = find_no_lines(data_up)
-	if len(data_lines) > 3:
+	if data_lines > 3:
 		data_up = ""
 		data_lo=""
 		
     
 	# Make decision about leg above ground
-	if yarray_up[-1] > -5.0:
+	if yarray_up[-1] > -5:
 		ula_success = True
 	else:
 		ula_success = False
 	
-	# Make decision about leg straight
-	if xarray_lo[-1]-xarray_up[-1] < 10.0:
+	# Make decision about leg straight - compares upper leg angle change with lower leg
+	if (np.absolute((yarray_lo[0]-yarray_lo[-1])-(yarray_up[-1]-yarray_up[0])) < 10.0):
 		lla_success = True
 	else:
 		lla_success = False
 		
 	# Make decision about muscle contraction - test for step change (upper)
-	if (max_difference(flexarray_up[-5:]) > 0.05):
-		ulm_success = not ulm_success
+	if (flexarray_up[-1]-flexarray_up[0]>0.05):
+		ulm_success = True
 	else:
-		ulm_success = ulm_success
+		ulm_success = False
 		
 	# Make decision about muscle contraction - test for step change (lower)
-	if (max_difference(flexarray_lo[-5:]) > 0.05):
-		llm_success = not ulm_success
+	if (flexarray_lo[-1]-flexarray_lo[0]<-0.06):
+		llm_success = True
 	else:
-		llm_success = ulm_success 
+		llm_success = False 
 		
+	# Toggle tick/cross images depending on status
 	dp.toggle_images(ula_success,lla_success,ulm_success,llm_success, im1l, im1r, im2l, im2r, im3l, im3r, im4l, im4r)
 
 
-# xarray_up = smoother.smooth(np.array(xarray_up).astype(np.float))
-bt.close(sock_up)
+# xarray_up = smoother.smooth(np.array(xarray_up).astype(np.float)) # Function that smooths data
+bt.close(sock_up) # Close bluetooth connections
 bt.close(sock_lo)
-dp.data_plot(xarray_up, yarray_up, flexarray_up, time_up)
-dp.data_plot(xarray_lo, yarray_lo, flexarray_lo, time_lo)
+# Plot all data
+dp.data_plot(xarray_up, yarray_up, zarray_up, flexarray_up, time_up)
+dp.data_plot(xarray_lo, yarray_lo, zarray_lo, flexarray_lo, time_lo)
 
 
 

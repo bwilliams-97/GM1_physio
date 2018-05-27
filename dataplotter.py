@@ -5,30 +5,34 @@ matplotlib.use("TkAgg")
 from matplotlib.pyplot import *
 import time
 
-def data_plot(x, y, flex, time):
+def data_plot(x, y, z, flex, time): # Function to plot x_angle, y_angle, z_angle, flex data
 	figure()
 	plot(time, x)
 	plot(time, y)
+	plot(time, z)
 	plot(time, flex)
 	title(r"Knee data")
 	ylabel("Amplitude")
 	xlabel("Time (s)")
-	legend(["x", "y", "flex"])
+	legend(["x", "y", "z", "flex"])
 	show()
 	
-def gui_plot():
+def gui_plot(): # Function to open matplot window for GUI
 	tick_img = imread('/home/pi/GM1_sensors/GM1_physio/tick.png')
 	cross_img = imread('/home/pi/GM1_sensors/GM1_physio/cross.png')
 	gui = figure('Leg raise status', figsize=(15,15))
 	ax = gui.add_subplot(111)
+	# Text lines
 	ax.text(0.1,0.8, "Leg above ground")
 	ax.text(0.1,0.6, "Leg straightened")
 	ax.text(0.1,0.4, "Upper leg muscle contracted")
 	ax.text(0.1,0.2, "Foot pointed inwards") 
 	
+	# Turn axis ticks off
 	ax.axes.get_xaxis().set_visible(False)
 	ax.axes.get_yaxis().set_visible(False)
 	
+	# Define image position
 	extent_1l = (0.7,0.8,0.75,0.85)
 	extent_1r = (0.8,0.9,0.75,0.85)
 	extent_2l = (0.7,0.8,0.55,0.65)
@@ -38,6 +42,7 @@ def gui_plot():
 	extent_4l = (0.7,0.8,0.15,0.25)
 	extent_4r = [0.8,0.9,0.15,0.25]
 	
+	# Show images
 	im1l = imshow(tick_img, extent=extent_1l)
 	im1r = imshow(cross_img, extent=extent_1r)
 	im2l = imshow(tick_img, extent=extent_2l)

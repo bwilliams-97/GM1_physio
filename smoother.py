@@ -1,5 +1,5 @@
 # Function that smooths values of array to act as low pass filter
-# Arguments: array (of length n), n
+# Arguments: array (of length n), window length, window type
 
 from scipy import signal
 import numpy as np
@@ -14,11 +14,14 @@ def smooth(x, window_len=11, window='hanning'):
             return x
         if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
             raise #ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
-
+		
+		# Extend array to allow convolution
         s=np.r_[2*x[0]-x[window_len-1::-1],x,2*x[-1]-x[-1:-window_len:-1]]
         if window == 'flat': #moving average
             w=np.ones(window_len,'d')
         else:  
             w=eval('np.'+window+'(window_len)')
+            
+		# Convolution
         y=np.convolve(w/w.sum(),s,mode='same')
         return y[window_len:-window_len+1]
