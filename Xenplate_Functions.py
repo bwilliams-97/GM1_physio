@@ -38,20 +38,23 @@ record_search = requests.post('https://cued2018.xenplate.com/api/record/search',
 #=======================================================================
 class Plate(object):
     """Class representing a plate record to send"""
-    def __init__(self, rec_id, temp_id, version, control_values, leg_raise_sessions):
+    def __init__(self, rec_id, temp_id, version, control_values, leg_raise_sessions, data_plot): #, raw_data
         self.record_id = rec_id
         self.temp_id = temp_id
         self.version = version
         self.control_values = control_values
         self.leg_raise_sessions = leg_raise_sessions
+        self.data_plot = data_plot
+#        self.raw_data = raw_data
 
     def to_json_dict(self):
-        # this might not be right, as I can't copy and paste your json
+        # append each input to plate_data_create to the control_json string ( .to_json_dict() ) note-this is a dictionary
         control_json = [self.leg_raise_sessions.to_json_dict()]
         for c in self.control_values:
             control_json += c.to_json_list()
 
-#        control_json += [self.last_task_comparison.to_json_dict()]
+        control_json += [self.data_plot.to_json_dict()]
+#        control_json += [self.raw_data.to_json_dict()]
 
         return {
             "data":{
@@ -129,6 +132,30 @@ class Angle(object):
             {"id": 18,"value": self.time},
             {"id": 25,"value": self.attempts}
         ]
+
+class data_plot(object):
+    """control value class"""
+    def __init__(self, k, n):
+        self.key = k
+        self.name = n
+
+    def to_json_dict(self):
+        return {"attachments":[{"description":"", "key":str(self.key), 
+                                "original_file_name":str(self.name), "saved_date_time":int(t_now)}], 
+            "id": 29, "value": ""}
+    
+#class raw_data(object):
+#    """control value class"""
+#    def __init__(self, k, n):
+#        self.key = k
+#        self.name = n
+#
+#    def to_json_dict(self):
+#        return {"attachments":[{"description":"", "key":str(self.key), 
+#                                "original_file_name":str(self.name), "saved_date_time":t_now}], 
+#            "id": 32, "value": ""}
+
+
 
 
 def create_plate(controls):

@@ -17,6 +17,8 @@ def data_plot(x, y, z, flex, time): # Function to plot x_angle, y_angle, z_angle
 	legend(["x", "y", "z", "flex"])
 	show()
 	
+	saveplot('fig.jpg')
+	
 def gui_plot(): # Function to open matplot window for GUI
 	tick_img = imread('/home/pi/GM1_sensors/GM1_physio/tick.png')
 	cross_img = imread('/home/pi/GM1_sensors/GM1_physio/cross.png')
@@ -90,5 +92,8 @@ def toggle_images(ula_success,lla_success,ulm_success,llm_success, im1l, im1r, i
 		im4r.set_visible(True)
 		
 	pause(0.005)
+
+def saveplot(path):
+	savefig(path)
 
 draw()

@@ -13,8 +13,22 @@ import Xenplate_Functions as xf
 import re
 from operator import add
 import math
+import requests
+from datetime import datetime
 
 
+user = "GroupThree"
+key = "wRjUm82tln5ZYPpd1tQ3rV0c"
+certif = "N3s7i2uYJ0pgAiRxEHv2FNYw"
+
+path = r"/home/pi/GM1_sensors/GM1_physio/Xenplate_permissions/L2S2-2018-CUEDGroup3-20180509"
+
+cert_path = path + ".crt"
+key_path = path + ".key.decrypted"
+
+s = "01/12/2011"
+t_stamp = time.mktime(datetime.strptime(s, "%d/%m/%Y").timetuple()) + 5364662400 #add seconds from 00:00:00 01/01/1800 to epoch (1970)
+t_now = datetime.now().timestamp() + 5364662400
 
 # Function that finds the max difference in an array
 # Not currently used (would be useful for detecting step changes over fixed interval)
@@ -70,10 +84,9 @@ ulm_timer = 0 # Used for step change
 im1l, im1r, im2l, im2r, im3l, im3r, im4l, im4r = dp.gui_plot() # Open GUI
 
 t0 = time.time() # Start timer
-while (elapsed < 20):
+while (elapsed < 30):
 	# Read data in - upper leg
 	x_rot_up, y_rot_up, z_rot_up, flex_up, success, data_up = bt.get_knee_data(sock_up, data_up)
-	print(upper_angle_instances)
 	if success is True: # If data read in, print out and append to data array
 		print("upper", x_rot_up, y_rot_up, z_rot_up, flex_up, elapsed, sep=" ")
 		xarray_up.append(x_rot_up)
@@ -130,7 +143,7 @@ while (elapsed < 20):
 			t0_straight_angle = 0.0 # Reset timer
 		
 	# Make decision about muscle contraction - test for step change (upper)
-	if (flexarray_up[-1]-flexarray_up[0]>0.0`5):
+	if (flexarray_up[-1]-flexarray_up[0]>0.05):
 		ulm_success = True
 		upper_muscle_success = True # Xenplate variable (only need one instance)
 		if t0_upper_muscle < 0.01:
@@ -165,16 +178,53 @@ while (elapsed < 20):
 bt.close(sock_up) # Close bluetooth connections
 bt.close(sock_lo)
 
+
+# Plot all data
+dp.data_plot(xarray_up, yarray_up, zarray_up, flexarray_up, time_up)
 #======================================================================
 ##all of the top level xenplate functions working (still need to add figures and raw data)
-##but sould be pretty simple to use, all that is needed is to edit the green numbers and move
+##but should be pretty simple to use, all that is needed is to edit the green numbers and move
+#need to connect first because of a bug in the code
+session = requests.Session()
+file_connect = session.get('https://cued2018.xenplate.com/api/file/connect',
+                               headers={'Authorization': 'X-API-KEY: ' + key},
+                               cert=(cert_path, key_path)
+                              )
+print(file_connect.text)
 
-plate_id = xf.get_newest_plate_id("38") #enter record_id as string, e.g. "5"
-print(plate_id)
+#add stupid '\\' to end of string to get backslash
+path = r"fig.jpg"
 
-template_id, plate_version = xf.get_plate_template_id_and_version("38", plate_id) #enter record_id and plate_id's as strings, e.g. "5", "1121"
-print(template_id)
-print(plate_version)
+#print(path + '\\' + file)
+
+with open(path, 'rb') as picture: #have to convert to rb to stream the picture in
+    file_create = session.post('https://cued2018.xenplate.com/api/file/create', 
+                                data = picture, 
+                                headers={'Authorization': 'X-API-KEY: ' + key},
+                                cert=(cert_path, key_path)
+                               )
+    print(file_create.text)
+
+    
+#print(upload_files(path, file))
+
+#this is bad code, if more time, use regular expressions
+def get_file_id(text):
+    #pick out and store the plate_data_id from when we create the plate
+    i = 0
+    while text[i] != "":
+        if i < len(text) - 17: #stops it going to the end to prevent errors
+            if text[i:i+10] == '"file_id":':
+                idnum = text[i+11:i+51]
+        
+        else: break
+
+        i = i+1
+    
+    return idnum
+
+file_id = get_file_id(file_create.text)
+lr = xf.LegRaiseSessions(1)
 
 c = [							#these are the green circles
     xf.Calf(lower_muscle_success, math.floor(max_lower_muscle_time*10)/10, lower_muscle_instances), # Yes or no, time, number of attempts
@@ -182,16 +232,14 @@ c = [							#these are the green circles
     xf.Straight(straight_angle_success, math.floor(max_straight_angle_time*10)/10, straight_angle_instances),
     xf.Angle(upper_angle_success, math.floor(max_upper_angle_time*10)/10, upper_angle_instances)
 ]
-p = xf.Plate("38", "3a5c9958-dc82-4c74-be84-ded2514fd9d8", "17", c, xf.LegRaiseSessions(1))
+p = xf.Plate("13", "3a5c9958-dc82-4c74-be84-ded2514fd9d8", "17", c, lr, xf.data_plot(file_id, 'File upload.jpg'))
 print(p.to_json_dict())
 
 # Currently leg raise session is set to 1 - this should be altered with a log file
 
 xf.create_plate(p)
 #======================================================================
-# Plot all data
-dp.data_plot(xarray_up, yarray_up, zarray_up, flexarray_up, time_up)
-dp.data_plot(xarray_lo, yarray_lo, zarray_lo, flexarray_lo, time_lo)
+#dp.data_plot(xarray_lo, yarray_lo, zarray_lo, flexarray_lo, time_lo)
 
 
 
