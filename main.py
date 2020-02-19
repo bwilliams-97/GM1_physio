@@ -201,8 +201,6 @@ with open(path, 'rb') as picture: #have to convert to rb to stream the picture i
                                )
     print(file_create.text)
 
-    
-#print(upload_files(path, file))
 
 #this is bad code, if more time, use regular expressions
 def get_file_id(text):
