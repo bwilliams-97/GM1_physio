@@ -8,3 +8,5 @@ Collection of functions with the purpose of reading data from a set of flex sens
 4) Foot pointed inwards
 
 These are displayed on a graphical user interface.
+
+### Note: This was my first python project in university and needs a systematic overhaul.
