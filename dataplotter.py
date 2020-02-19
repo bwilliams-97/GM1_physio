@@ -17,11 +17,11 @@ def data_plot(x, y, z, flex, time): # Function to plot x_angle, y_angle, z_angle
 	legend(["x", "y", "z", "flex"])
 	show()
 	
-	saveplot('fig.jpg')
+	saveplot('img/fig.jpg')
 	
 def gui_plot(): # Function to open matplot window for GUI
-	tick_img = imread('/home/pi/GM1_sensors/GM1_physio/tick.png')
-	cross_img = imread('/home/pi/GM1_sensors/GM1_physio/cross.png')
+	tick_img = imread('/home/pi/GM1_sensors/GM1_physio/img/tick.png')
+	cross_img = imread('/home/pi/GM1_sensors/GM1_physio/img/cross.png')
 	gui = figure('Leg raise status', figsize=(15,15))
 	ax = gui.add_subplot(111)
 	# Text lines
