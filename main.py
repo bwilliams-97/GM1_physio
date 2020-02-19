@@ -1,21 +1,20 @@
 #!/usr/bin/python3
 
 # Main device operation
-
-import arduino_bt as bt 
-import clock_sync as sync
-import smoother
-import time
-import dataplotter as dp
-import numpy as np
-import sys
-import Xenplate_Functions as xf
 import re
-from operator import add
 import math
 import requests
 from datetime import datetime
+import sys
+sys.path.insert(0,'utils/')
 
+import numpy as np
+
+import arduino_bt as bt 
+import smoother
+import time
+import dataplotter as dp
+import Xenplate_Functions as xf
 
 user = "GroupThree"
 key = "wRjUm82tln5ZYPpd1tQ3rV0c"
@@ -192,10 +191,7 @@ file_connect = session.get('https://cued2018.xenplate.com/api/file/connect',
                               )
 print(file_connect.text)
 
-#add stupid '\\' to end of string to get backslash
-path = r"fig.jpg"
-
-#print(path + '\\' + file)
+path = r"utils\\fig.jpg"
 
 with open(path, 'rb') as picture: #have to convert to rb to stream the picture in
     file_create = session.post('https://cued2018.xenplate.com/api/file/create', 
